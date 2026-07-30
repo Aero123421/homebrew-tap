@@ -1,0 +1,104 @@
+name: sync latest release
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-latest-formula
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Fetch the Formula from the latest sfh Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir staged
+          curl --proto '=https' --tlsv1.2 --fail --location \
+            --silent --show-error --retry 3 \
+            --output staged/sfh.rb \
+            https://github.com/Aero123421/SimpleFlowHarness/releases/latest/download/sfh.rb
+          ruby -c staged/sfh.rb
+          test "$(grep -c '^class Sfh < Formula$' staged/sfh.rb)" -eq 1
+      - name: Detect a new Formula
+        id: diff
+        shell: bash
+        run: |
+          if cmp -s staged/sfh.rb Formula/sfh.rb; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Stage the candidate
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: candidate-formula
+          path: staged/sfh.rb
+          if-no-files-found: error
+          retention-days: 1
+
+  test:
+    needs: prepare
+    if: needs.prepare.outputs.changed == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: candidate-formula
+          path: staged
+      - name: Add Homebrew to PATH on Linux
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+          echo "/home/linuxbrew/.linuxbrew/sbin" >> "$GITHUB_PATH"
+      - name: Install and test the candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp staged/sfh.rb Formula/sfh.rb
+          brew install --formula "$PWD/Formula/sfh.rb"
+          brew test sfh
+          sfh --version
+
+  publish:
+    needs: [prepare, test]
+    if: needs.prepare.outputs.changed == 'true' && needs.test.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: candidate-formula
+          path: staged
+      - name: Commit the tested Formula
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp staged/sfh.rb Formula/sfh.rb
+          version="$(sed -n 's/^  version "\(.*\)"$/\1/p' Formula/sfh.rb)"
+          test -n "$version"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/sfh.rb
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: update sfh to v$version"
+          git push origin HEAD:main
