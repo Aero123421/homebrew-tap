@@ -27,6 +27,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          brew install --formula "$PWD/Formula/sfh.rb"
-          brew test sfh
+          brew tap Aero123421/tap
+          tap_dir="$(brew --repository Aero123421/tap)"
+          cp "$PWD/Formula/sfh.rb" "$tap_dir/Formula/sfh.rb"
+          brew install Aero123421/tap/sfh
+          brew test Aero123421/tap/sfh
           sfh --version
