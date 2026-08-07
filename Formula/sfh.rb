@@ -1,26 +1,26 @@
 class Sfh < Formula
   desc "Chain AI CLI agents and commands into YAML-defined flows"
   homepage "https://github.com/Aero123421/SimpleFlowHarness"
-  version "1.1.4"
+  version "1.1.5"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.4/sfh-macos-arm64.tar.gz"
-      sha256 "77e1f1e0fa9715c6acfb6300a908982777e9a2646dd8ea8e159cf9296b2ea922"
+      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.5/sfh-macos-arm64.tar.gz"
+      sha256 "ecb222d7171da0d61e57bfcba3403060fc96c9aa694e654ed0d0541d4dfd0ad4"
     else
-      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.4/sfh-macos-x64.tar.gz"
-      sha256 "c2a6e9898b7f7d79dd2bac1d884dfe1370f6583cb8b3a480f8575a81c23f03a9"
+      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.5/sfh-macos-x64.tar.gz"
+      sha256 "310742384f4f3eb66b0f2f8414f28e09b5530a0c224c85f7a67bda35edfee474"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.4/sfh-linux-arm64.tar.gz"
-      sha256 "c9ff0d1ec881e0db334d812e6f9789420cc064234610586d917ae541f1aaf901"
+      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.5/sfh-linux-arm64.tar.gz"
+      sha256 "2dd510b14a5ca1f532d51c1589b44aaf56d9ca2cd83373d3b951163a2641696d"
     else
-      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.4/sfh-linux-x64.tar.gz"
-      sha256 "c98870f860a88ca5d6262f4f278c13cda9f2aa4070d43f7c9f020285eac60da0"
+      url "https://github.com/Aero123421/SimpleFlowHarness/releases/download/v1.1.5/sfh-linux-x64.tar.gz"
+      sha256 "0fe39f330d983f8fb95d44045e85e415c608f3ffa4ed77f2d128d572922fa8eb"
     end
   end
 
